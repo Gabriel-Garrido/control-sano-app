@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "config/FirebaseConfig.js", "app/login/signIn.jsx", "app/_layout.jsx", "app/login/signUp.jsx", "app/login/index.jsx", "app/(tabs)/_layout.jsx"  ]
 }
