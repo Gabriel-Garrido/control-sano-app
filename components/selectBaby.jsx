@@ -2,6 +2,9 @@ import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import Colors from "../constant/Colors";
 
+/**
+ * Selector de bebés: muestra todos los bebés del usuario y permite seleccionar o agregar uno nuevo.
+ */
 export default function SelectBaby({
   babyList = [],
   loading = false,

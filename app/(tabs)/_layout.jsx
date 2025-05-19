@@ -6,10 +6,15 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../config/FirebaseConfig";
 import { getLocalStorage } from "../../service/Storage";
 import Header from "../../components/Header";
+import { verifyUserInFirebase } from "../../utils/authUtils";
+
 
 export default function TabLayout() {
   const router = useRouter();
 
+  useEffect(() => {
+    verifyUserInFirebase(router);
+  }, []);
   useEffect(()=>{
     GetUserDetail()
   },[])

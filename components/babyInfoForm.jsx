@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { db, auth } from "../config/FirebaseConfig";
-import { collection, addDoc, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import DateSelector from "./DateSelector";
 import Colors from "../constant/Colors";
+import { getLocalStorage, setLocalStorage } from "../service/Storage";
 
+/**
+ * Formulario para agregar o editar información de un bebé.
+ * Si initialData es null, crea un nuevo bebé.
+ * Si initialData tiene datos, edita el bebé existente.
+ */
 export default function BabyInfoForm({ initialData, onClose }) {
   const [firstName, setFirstName] = useState(initialData?.firstName || "");
   const [lastName, setLastName] = useState(initialData?.lastName || "");
@@ -30,6 +36,7 @@ export default function BabyInfoForm({ initialData, onClose }) {
     );
   }, [initialData]);
 
+  // Maneja el guardado (crear o editar)
   const handleSubmit = async () => {
     if (!firstName) {
       setFeedback({ type: "error", message: "El nombre es obligatorio" });
@@ -42,12 +49,9 @@ export default function BabyInfoForm({ initialData, onClose }) {
     }
     setLoading(true);
     try {
-      const q = query(collection(db, "baby"), where("userEmail", "==", user.email));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const babyDoc = querySnapshot.docs[0];
-        await updateDoc(doc(db, "baby", babyDoc.id), {
+      if (initialData && initialData.id) {
+        // Editar bebé existente
+        await updateDoc(doc(db, "baby", initialData.id), {
           firstName,
           lastName,
           birthDate,
@@ -55,6 +59,7 @@ export default function BabyInfoForm({ initialData, onClose }) {
         });
         setFeedback({ type: "success", message: "¡Información actualizada con éxito!" });
       } else {
+        // Crear nuevo bebé
         await addDoc(collection(db, "baby"), {
           firstName,
           lastName,
@@ -68,6 +73,56 @@ export default function BabyInfoForm({ initialData, onClose }) {
       console.error("addDoc/updateDoc error:", error);
     }
     setLoading(false);
+  };
+
+  // Confirmación multiplataforma para eliminar
+  const confirmDelete = () => {
+    if (Platform.OS === "web") {
+      // Web: usar window.confirm
+      if (window.confirm("¿Estás seguro de que deseas eliminar este bebé? Esta acción no se puede deshacer.")) {
+        handleDelete();
+      }
+    } else {
+      // Móvil: usar Alert
+      import("react-native").then(({ Alert }) => {
+        Alert.alert(
+          "Eliminar bebé",
+          "¿Estás seguro de que deseas eliminar este bebé? Esta acción no se puede deshacer.",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar",
+              style: "destructive",
+              onPress: handleDelete,
+            }
+          ]
+        );
+      });
+    }
+  };
+
+  // Maneja la eliminación del bebé (Firebase y localStorage)
+  const handleDelete = async () => {
+    setLoading(true);
+    let success = false;
+    try {
+      // Eliminar de Firebase
+      await deleteDoc(doc(db, "baby", initialData.id));
+      // Eliminar de localStorage si es el seleccionado
+      const selectedId = await getLocalStorage("selectedBabyId");
+      if (selectedId === initialData.id) {
+        await setLocalStorage("selectedBabyId", null);
+      }
+      setFeedback({ type: "success", message: "¡Bebé eliminado con éxito!" });
+      success = true;
+    } catch (error) {
+      setFeedback({ type: "error", message: "Error al eliminar: " + error.message });
+      console.error("deleteDoc error:", error);
+    }
+    setLoading(false);
+    setTimeout(() => {
+      if (success && onClose) onClose();
+    }, 1200);
   };
 
   if (feedback) {
@@ -137,6 +192,17 @@ export default function BabyInfoForm({ initialData, onClose }) {
             <Text style={styles.buttonText}>Guardar</Text>
           )}
         </TouchableOpacity>
+        {/* Botón para eliminar solo si es edición */}
+        {initialData && initialData.id && (
+          <TouchableOpacity
+            style={[styles.button, styles.deleteButton]}
+            onPress={confirmDelete}
+            disabled={loading}
+            accessibilityLabel="Eliminar bebé"
+          >
+            <Text style={styles.buttonText}>Eliminar bebé</Text>
+          </TouchableOpacity>
+        )}
         <Text style={styles.note}><Text style={styles.required}>*</Text> Campo obligatorio</Text>
       </View>
     </KeyboardAvoidingView>
@@ -208,6 +274,10 @@ const styles = StyleSheet.create({
   },
   buttonError: {
     backgroundColor: "#c62828",
+  },
+  deleteButton: {
+    backgroundColor: "#c62828",
+    marginTop: 10,
   },
   buttonText: {
     fontSize: 18,

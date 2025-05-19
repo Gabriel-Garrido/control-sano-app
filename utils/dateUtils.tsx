@@ -55,3 +55,26 @@ export function dateToLocaleString(date: Date | { toDate: () => Date } | { secon
   }
   return d.toLocaleDateString("es-ES");
 }
+
+/**
+ * Calcula la edad en días desde birthDate hasta hoy.
+ * @param {Date|{toDate:Function}|{seconds:number}} birthDate
+ * @returns {number} Edad en días (1 = primer día de vida)
+ */
+export function getAgeInDays(
+  birthDate: Date | { toDate: () => Date } | { seconds: number }
+): number {
+  if (!birthDate) return 0;
+  let date: Date;
+  if (typeof (birthDate as any).toDate === "function") {
+    date = (birthDate as { toDate: () => Date }).toDate();
+  } else if (typeof (birthDate as any).seconds === "number") {
+    date = new Date((birthDate as { seconds: number }).seconds * 1000);
+  } else {
+    date = new Date(birthDate as Date);
+  }
+  const today = new Date();
+  // Calcular diferencia en milisegundos y convertir a días
+  const diffTime = today.getTime() - date.getTime();
+  return Math.max(1, Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1); // Día 1 es el primer día de vida
+}
