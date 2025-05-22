@@ -6,6 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import Colors from "../../constant/Colors";
 import healthControls from "../../constant/Options";
@@ -13,7 +15,7 @@ import ControlForm from "../../components/ControlForm";
 import { db, auth } from "../../config/FirebaseConfig";
 import { query, where, getDocs, collection } from "firebase/firestore";
 import { getLocalStorage, setLocalStorage } from "../../service/Storage";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import SelectBaby from "../../components/selectBaby";
 import BabyHeader from "../../components/BabyHeader";
 import ControlsList from "../../components/ControlsList";
@@ -21,8 +23,12 @@ import BabyInfoForm from "../../components/babyInfoForm";
 import LoadingScreen from "../../components/LoadingScreen";
 import { onAuthStateChanged } from "firebase/auth";
 import DailyTip from "../../components/DailyTip";
+import Header from "../../components/Header";
 
-
+/**
+ * Pantalla principal: muestra header, info del bebé, consejo diario y controles.
+ * UX/UI mejorada para móviles: uso de SafeAreaView, espaciados, jerarquía visual y scroll fluido.
+ */
 export default function Index() {
   // Estados principales
   const [selectedControl, setSelectedControl] = useState(null);
@@ -55,24 +61,68 @@ export default function Index() {
     return () => unsubscribe();
   }, []);
 
-  // Cargar babyId desde localStorage y setear babyInfo
+  // Al cargar la app, verifica si hay un bebé seleccionado en localStorage
   useEffect(() => {
-    // Si aún se están cargando los bebés, no hacer nada
-    if (babyLoading) return;
-    const loadSelectedBaby = async () => {
-      setInitializing(true); // Mostrar loading mientras se determina el bebé seleccionado
+    const checkSelectedBaby = async () => {
       const id = await getLocalStorage("selectedBabyId");
-      setSelectedBabyId(id);
-      if (id && babyList.length > 0) {
-        const baby = babyList.find((b) => b.id === id);
-        setBabyInfo(baby);
+      if (id) {
+        setSelectedBabyId(id);
+        setBabySelectorVisible(false);
       } else {
-        setBabyInfo(null);
+        setSelectedBabyId(null);
+        setBabySelectorVisible(true);
       }
-      setInitializing(false); // Ocultar loading cuando termina
     };
-    loadSelectedBaby();
-  }, [babyList, babyLoading]);
+    checkSelectedBaby();
+  }, [babyList]);
+
+  // Cargar babyInfo cuando cambia el selectedBabyId o la lista de bebés
+  useEffect(() => {
+    if (babyLoading) return;
+    if (selectedBabyId && babyList.length > 0) {
+      const baby = babyList.find((b) => b.id === selectedBabyId);
+      setBabyInfo(baby);
+      setInitializing(false);
+    } else {
+      setBabyInfo(null);
+    }
+  }, [selectedBabyId, babyList, babyLoading]);
+
+    // Sincroniza el bebé seleccionado cada vez que la pantalla obtiene el foco
+  useFocusEffect(
+    React.useCallback(() => {
+      const syncSelectedBaby = async () => {
+        const id = await getLocalStorage("selectedBabyId");
+        setSelectedBabyId(id);
+
+        // Si hay un id y usuario autenticado, obtener info actualizada de Firebase
+        if (id && userEmail) {
+          try {
+            const q = query(
+              collection(db, "baby"),
+              where("userEmail", "==", userEmail),
+              where("__name__", "==", id)
+            );
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+              const baby = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+              setBabyInfo(baby);
+            }
+          } catch (e) {
+            // Si hay error, fallback a la lista local
+            if (babyList.length > 0) {
+              const baby = babyList.find((b) => b.id === id);
+              setBabyInfo(baby);
+            }
+          }
+        } else if (id && babyList.length > 0) {
+          const baby = babyList.find((b) => b.id === id);
+          setBabyInfo(baby);
+        }
+      };
+      syncSelectedBaby();
+    }, [babyList, userEmail])
+  );
 
   // Cargar lista de bebés del usuario
   const loadBabies = async (email) => {
@@ -94,7 +144,6 @@ export default function Index() {
 
   // Cargar controles realizados para el bebé seleccionado
   useEffect(() => {
-    // Si aún se está inicializando, no cargar controles
     if (initializing) return;
     const fetchDoneControls = async () => {
       if (!userEmail || !selectedBabyId) {
@@ -121,45 +170,47 @@ export default function Index() {
 
   // Seleccionar bebé y guardar en localStorage
   const handleSelectBaby = async (babyId) => {
-    setInitializing(true); // Mostrar loading mientras cambia el bebé seleccionado
+    setInitializing(true);
     setSelectedBabyId(babyId);
     await setLocalStorage("selectedBabyId", babyId);
     const baby = babyList.find((b) => b.id === babyId);
     setBabyInfo(baby);
     setBabySelectorVisible(false);
-    setInitializing(false); // Ocultar loading cuando termina
+    setInitializing(false);
   };
 
-  // Mostrar selector de bebés o formulario para crear bebé
-  if (babySelectorVisible) {
+  // Mostrar selector de bebés o formulario para crear bebé solo si NO hay bebé seleccionado
+  if (babySelectorVisible && !selectedBabyId) {
     if (showForm) {
-      // Mostrar solo el formulario para crear bebé
       return (
-        <View style={styles.formWrapper}>
-          <BabyInfoForm
-            initialData={null}
-            onClose={() => {
-              setShowForm(false);
-              if (userEmail) loadBabies(userEmail);
-            }}
-          />
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={() => setShowForm(false)}
-          >
-            <Text style={styles.closeBtnText}>Cerrar</Text>
-          </TouchableOpacity>
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.formWrapper}>
+            <BabyInfoForm
+              initialData={null}
+              onClose={() => {
+                setShowForm(false);
+                if (userEmail) loadBabies(userEmail);
+              }}
+            />
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setShowForm(false)}
+            >
+              <Text style={styles.closeBtnText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       );
     }
-    // Mostrar selector de bebés SIEMPRE con la lista completa
     return (
-      <SelectBaby
-        babyList={babyList}
-        loading={babyLoading}
-        onSelect={handleSelectBaby}
-        onAddBaby={() => setShowForm(true)}
-      />
+      <SafeAreaView style={styles.safeArea}>
+        <SelectBaby
+          babyList={babyList}
+          loading={babyLoading}
+          onSelect={handleSelectBaby}
+          onAddBaby={() => setShowForm(true)}
+        />
+      </SafeAreaView>
     );
   }
 
@@ -205,82 +256,121 @@ export default function Index() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Mostrar info del bebé seleccionado */}
-      <BabyHeader baby={babyInfo} />
-      {/* Botón para cambiar de bebé */}
-      <DailyTip birthDate={babyInfo?.birthDate} />
-      {/* Botón para cambiar de bebé */}
-      <TouchableOpacity
-        style={styles.changeBabyBtn}
-        onPress={() => setBabySelectorVisible(true)}
+    <SafeAreaView style={styles.safeArea}>
+
+      {/* Scroll principal para el resto del contenido */}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.changeBabyBtnText}>Cambiar de bebé</Text>
-      </TouchableOpacity>
-      {/* Lista de controles */}
-      <ControlsList
-        controls={healthControls}
-        doneControls={doneControls}
-        onSelect={handleSelectControl}
-        loading={initializing || babyLoading}
-      />
+        {/* Info del bebé seleccionada */}
+        <View style={styles.section}>
+          <BabyHeader baby={babyInfo} />
+        </View>
+
+        {/* Botón para cambiar de bebé */}
+        <TouchableOpacity
+          style={styles.changeBabyBtn}
+          onPress={async () => {
+            await setLocalStorage("selectedBabyId", null);
+            setSelectedBabyId(null);
+            setBabySelectorVisible(true);
+          }}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.changeBabyBtnText}>Cambiar de bebé</Text>
+        </TouchableOpacity>
+
+        {/* Consejo diario destacado */}
+        <View style={styles.section}>
+          <DailyTip birthDate={babyInfo?.birthDate} />
+        </View>
+
+        {/* Lista de controles de salud */}
+        <View style={styles.section}>
+          <ControlsList
+            controls={healthControls}
+            doneControls={doneControls}
+            onSelect={handleSelectControl}
+            loading={initializing || babyLoading}
+          />
+        </View>
+      </ScrollView>
+
       {/* Modal para formulario de control */}
       <Modal
         visible={!!selectedControl}
         animationType="slide"
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeBtn} onPress={handleCloseModal}>
-            <Text style={styles.closeBtnText}>Cerrar</Text>
-          </TouchableOpacity>
-          {loading ? (
-            <LoadingScreen text="Cargando control..." />
-          ) : (
-            <ControlForm
-              control={selectedControl}
-              controlData={controlData}
-              onSaved={handleFormSaved}
-              onClose={handleCloseModal}
-              userEmail={userEmail}
-              babyId={selectedBabyId}
-            />
-          )}
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity style={styles.closeBtn} onPress={handleCloseModal}>
+              <Text style={styles.closeBtnText}>Cerrar</Text>
+            </TouchableOpacity>
+            {loading ? (
+              <LoadingScreen text="Cargando control..." />
+            ) : (
+              <ControlForm
+                control={selectedControl}
+                controlData={controlData}
+                onSaved={handleFormSaved}
+                onClose={handleCloseModal}
+                userEmail={userEmail}
+                babyId={selectedBabyId}
+              />
+            )}
+          </View>
+        </SafeAreaView>
       </Modal>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
-// Estilos
+// Estilos mejorados para UX/UI móvil
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f5f7fa",
+  },
   container: {
     flex: 1,
-    padding: 18,
     backgroundColor: "#f5f7fa",
+  },
+  scrollContent: {
+    padding: 18,
+    paddingBottom: 32,
+  },
+  section: {
+    marginBottom: 18,
   },
   changeBabyBtn: {
     backgroundColor: "#fff",
     borderColor: Colors.PRIMARY,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
-    padding: 10,
-    marginBottom: 18,
+    paddingVertical: 12,
+    marginBottom: 22,
     alignSelf: "center",
-    width: 180,
+    width: "80%",
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   changeBabyBtnText: {
     color: Colors.PRIMARY,
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 17,
     letterSpacing: 0.3,
   },
   modalContainer: {
     flex: 1,
     backgroundColor: "#fff",
     padding: 18,
-    paddingTop: 40,
+    paddingTop: Platform.OS === "android" ? 40 : 18,
   },
   closeBtn: {
     alignSelf: "flex-end",

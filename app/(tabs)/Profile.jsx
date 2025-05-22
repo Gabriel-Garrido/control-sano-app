@@ -7,7 +7,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import Colors from '../../constant/Colors'
 import { calculateAge, dateToLocaleString } from '../../utils/dateUtils'
 import { getLocalStorage, setLocalStorage } from '../../service/Storage'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import SelectBaby from '../../components/selectBaby'
 
 export default function Profile() {
@@ -34,6 +34,20 @@ export default function Profile() {
     })
     return () => unsubscribe()
   }, [])
+
+    useFocusEffect(
+    React.useCallback(() => {
+      const syncSelectedBaby = async () => {
+        const id = await getLocalStorage("selectedBabyId");
+        setSelectedBabyId(id);
+        if (id && babyList.length > 0) {
+          const baby = babyList.find((b) => b.id === id);
+          setBabyInfo(baby);
+        }
+      };
+      syncSelectedBaby();
+    }, [babyList])
+  );
 
   // Cargar babyId desde localStorage y setear babyInfo
   useEffect(() => {

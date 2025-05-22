@@ -5,6 +5,14 @@ import { getAgeInDays } from "../utils/dateUtils";
 
 /**
  * Componente que muestra el consejo diario según la edad del bebé en días.
+ * 
+ * prompt para chatgpt : 
+ * ""realiza una investigacion sobre los cuidados y recomendaciones de un bebe de 12 meses , busca informacion en lugares confiables de chile . luego continuemos los dias del json anterior , un archivo json que tenga un consejo diario para todos los dias del mes 12 de un bebe , cada consejo debe tener un titulo y un texto, esto se mostrara en una app de control de niño, por lo que el texto del consejo debe ser tierno y bien informativo, utilizando terminos cientificos explicados con palabras simples. debe ser de aprox 10 lineas cada consejo. la respuesta debe ser solo en json en este formato, con esos keys ''{
+      "day": 35,
+      "title": "Escuchando y aprendiendo",
+      "text": "Tu capacidad auditiva mejora cada día. Hablarte, cantarte y responder a tus balbuceos estimula tu desarrollo del lenguaje. Estas interacciones tempranas son la base para futuras habilidades comunicativas."
+    }'' el json debe tener los siguientes 30 días del json anterior, no incluyas consejos que digan cuanta edad cumple"""
+ * 
  * Busca el consejo en el archivo JSON de recomendaciones.
  */
 export default function DailyTip({ birthDate }) {

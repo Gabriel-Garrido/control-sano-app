@@ -1,4 +1,4 @@
-import { View, Text, Image, Alert, TouchableOpacity, Platform } from "react-native";
+import { View, Text, Image, TouchableOpacity, Platform } from "react-native";
 import React, { useEffect, useState } from "react";
 import { getLocalStorage, RemoveLocalStorage } from "../service/Storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -7,10 +7,15 @@ import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/FirebaseConfig";
 
+/**
+ * Header superior: muestra logo, saludo y botón de logout.
+ * Mejor UX/UI: disposición horizontal, avatar, nombre grande y botón accesible.
+ */
 export default function Header() {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
+  // Obtiene los detalles del usuario desde localStorage
   const GetUserDetails = async () => {
     try {
       const userInfo = await getLocalStorage("userDetail");
@@ -24,9 +29,9 @@ export default function Header() {
     GetUserDetails();
   }, []);
 
+  // Maneja el cierre de sesión con confirmación multiplataforma
   const handleLogout = () => {
     if (Platform.OS === "web") {
-      // Usar confirm nativo en web
       if (window.confirm("¿Seguro que deseas cerrar sesión?")) {
         signOut(auth)
           .then(async () => {
@@ -38,72 +43,110 @@ export default function Header() {
           });
       }
     } else {
-      // Usar Alert en móvil
-      Alert.alert(
-        "Cerrar sesión",
-        "¿Seguro que deseas cerrar sesión?",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Sí, cerrar sesión",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await signOut(auth);
-                await RemoveLocalStorage();
-                router.replace("/login/signIn");
-              } catch (e) {
-                Alert.alert("Error", "No se pudo cerrar sesión.");
-              }
+      import("react-native").then(({ Alert }) => {
+        Alert.alert(
+          "Cerrar sesión",
+          "¿Seguro que deseas cerrar sesión?",
+          [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Sí, cerrar sesión",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await signOut(auth);
+                  await RemoveLocalStorage();
+                  router.replace("/login/signIn");
+                } catch (e) {
+                  Alert.alert("Error", "No se pudo cerrar sesión.");
+                }
+              },
             },
-          },
-        ],
-        { cancelable: true }
-      );
+          ],
+          { cancelable: true }
+        );
+      });
     }
   };
 
   return (
-    <View
-      style={{
-        marginTop: 20,
-        paddingHorizontal: 15,
-      }}
-    >
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
+    <View style={headerStyles.headerWrapper}>
+      <View style={headerStyles.headerRow}>
+        {/* Logo y saludo */}
+        <View style={headerStyles.logoRow}>
           <Image
             source={require("../assets/images/icon.png")}
-            style={{
-              width: 45,
-              height: 45,
-              marginRight: 10,
-            }}
+            style={headerStyles.logo}
           />
-          <Text
-            style={{
-              fontSize: 25,
-              fontWeight: "bold",
-            }}
-          >
-            Hello {user?.displayName || "Guest"} 👋
-          </Text>
+          <View>
+            <Text style={headerStyles.helloText}>
+              ¡Hola, {user?.displayName || "Usuario"}!
+            </Text>
+            <Text style={headerStyles.emailText} numberOfLines={1}>
+              {user?.email || ""}
+            </Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={handleLogout} accessibilityLabel="Cerrar sesión">
-          <Ionicons name="log-out-outline" size={34} color={Colors.DARK_GRAY} />
+        {/* Botón logout */}
+        <TouchableOpacity
+          onPress={handleLogout}
+          accessibilityLabel="Cerrar sesión"
+          style={headerStyles.logoutBtn}
+        >
+          <Ionicons name="log-out-outline" size={30} color={Colors.PRIMARY} />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+// Estilos mejorados para header móvil
+const headerStyles = {
+  headerWrapper: {
+    backgroundColor: "#fff",
+    paddingTop: Platform.OS === "android" ? 32 : 18,
+    paddingBottom: 10,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  logo: {
+    width: 44,
+    height: 44,
+    marginRight: 12,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+  },
+  helloText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.PRIMARY,
+    marginBottom: 2,
+  },
+  emailText: {
+    fontSize: 13,
+    color: Colors.DARK_GRAY,
+    maxWidth: 160,
+  },
+  logoutBtn: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#f5f7fa",
+    marginLeft: 8,
+  },
+};

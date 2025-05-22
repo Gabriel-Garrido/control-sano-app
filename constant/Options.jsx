@@ -12,7 +12,7 @@ const healthControls = [
   },
   {
     label: "1 mes",
-    professional: "Pediatra/Enfermera",
+    professional: "Médico",
     fields: [
       { key: "peso", label: "Peso (kg)", type: "number" },
       { key: "talla", label: "Talla (cm)", type: "number" },
@@ -22,7 +22,7 @@ const healthControls = [
   },
   {
     label: "2 meses",
-    professional: "Pediatra/Enfermera",
+    professional: "Enfermera",
     fields: [
       { key: "peso", label: "Peso (kg)", type: "number" },
       { key: "talla", label: "Talla (cm)", type: "number" },
@@ -32,16 +32,17 @@ const healthControls = [
   },
   {
     label: "3 meses",
-    professional: "Pediatra/Enfermera",
+    professional: "Médico",
     fields: [
       { key: "peso", label: "Peso (kg)", type: "number" },
       { key: "talla", label: "Talla (cm)", type: "number" },
       { key: "observaciones", label: "Observaciones", type: "text" },
+      { key: "radiografia_cadera", label: "Radiografía de cadera", type: "text" },
     ],
   },
   {
     label: "4 meses",
-    professional: "Pediatra/Enfermera",
+    professional: "Enfermera",
     fields: [
       { key: "peso", label: "Peso (kg)", type: "number" },
       { key: "talla", label: "Talla (cm)", type: "number" },
