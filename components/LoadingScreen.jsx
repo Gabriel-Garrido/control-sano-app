@@ -1,5 +1,11 @@
 import React from "react";
-import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Colors from "../constant/Colors";
 
 /**
@@ -21,6 +27,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 24,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 8px rgba(0,0,0,0.08)" }
+      : {}),
   },
   loadingText: {
     marginTop: 18,

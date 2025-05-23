@@ -1,41 +1,48 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { db, auth } from '../../config/FirebaseConfig'
-import BabyInfoForm from '../../components/babyInfoForm'
-import { query, where, getDocs, collection } from "firebase/firestore";
+import { useFocusEffect, useRouter } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
-import Colors from '../../constant/Colors'
-import { calculateAge, dateToLocaleString } from '../../utils/dateUtils'
-import { getLocalStorage, setLocalStorage } from '../../service/Storage'
-import { useFocusEffect, useRouter } from 'expo-router'
-import SelectBaby from '../../components/selectBaby'
+import { collection, getDocs, query, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import BabyInfoForm from "../../components/babyInfoForm";
+import SelectBaby from "../../components/selectBaby";
+import { auth, db } from "../../config/FirebaseConfig";
+import Colors from "../../constant/Colors";
+import { getLocalStorage, setLocalStorage } from "../../service/Storage";
+import { calculateAge, dateToLocaleString } from "../../utils/dateUtils";
 
 export default function Profile() {
-  const [babyInfo, setBabyInfo] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [user, setUser] = useState(null)
-  const [babyList, setBabyList] = useState([])
-  const [selectedBabyId, setSelectedBabyId] = useState(null)
-  const [babySelectorVisible, setBabySelectorVisible] = useState(true)
-  const [babyLoading, setBabyLoading] = useState(true)
-  const router = useRouter()
+  const [babyInfo, setBabyInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [user, setUser] = useState(null);
+  const [babyList, setBabyList] = useState([]);
+  const [selectedBabyId, setSelectedBabyId] = useState(null);
+  const [babySelectorVisible, setBabySelectorVisible] = useState(true);
+  const [babyLoading, setBabyLoading] = useState(true);
+  const router = useRouter();
 
   // Cargar usuario y bebés al iniciar
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser)
+      setUser(firebaseUser);
       if (firebaseUser) {
-        loadBabies(firebaseUser.email)
+        loadBabies(firebaseUser.email);
       } else {
-        setBabyList([])
-        setLoading(false)
+        setBabyList([]);
+        setLoading(false);
       }
-    })
-    return () => unsubscribe()
-  }, [])
+    });
+    return () => unsubscribe();
+  }, []);
 
-    useFocusEffect(
+  useFocusEffect(
     React.useCallback(() => {
       const syncSelectedBaby = async () => {
         const id = await getLocalStorage("selectedBabyId");
@@ -52,58 +59,58 @@ export default function Profile() {
   // Cargar babyId desde localStorage y setear babyInfo
   useEffect(() => {
     const loadSelectedBaby = async () => {
-      const id = await getLocalStorage('selectedBabyId')
-      setSelectedBabyId(id)
+      const id = await getLocalStorage("selectedBabyId");
+      setSelectedBabyId(id);
       if (id && babyList.length > 0) {
-        const baby = babyList.find(b => b.id === id)
+        const baby = babyList.find((b) => b.id === id);
         if (baby) {
-          setBabyInfo(baby)
-          setBabySelectorVisible(false)
-          setLoading(false)
+          setBabyInfo(baby);
+          setBabySelectorVisible(false);
+          setLoading(false);
         } else {
-          setBabyInfo(null)
-          setBabySelectorVisible(true)
+          setBabyInfo(null);
+          setBabySelectorVisible(true);
         }
       } else {
-        setBabyInfo(null)
-        setBabySelectorVisible(true)
+        setBabyInfo(null);
+        setBabySelectorVisible(true);
       }
-    }
-    loadSelectedBaby()
-  }, [babyList])
+    };
+    loadSelectedBaby();
+  }, [babyList]);
 
   // Cargar lista de bebés del usuario
   const loadBabies = async (email) => {
-    setBabyLoading(true)
+    setBabyLoading(true);
     if (!email) {
-      setBabyList([])
-      setBabyLoading(false)
-      return
+      setBabyList([]);
+      setBabyLoading(false);
+      return;
     }
-    const q = query(collection(db, "baby"), where("userEmail", "==", email))
-    const querySnapshot = await getDocs(q)
-    const babies = querySnapshot.docs.map(doc => ({
+    const q = query(collection(db, "baby"), where("userEmail", "==", email));
+    const querySnapshot = await getDocs(q);
+    const babies = querySnapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data()
-    }))
-    setBabyList(babies)
-    setBabyLoading(false)
-  }
+      ...doc.data(),
+    }));
+    setBabyList(babies);
+    setBabyLoading(false);
+  };
 
   // Seleccionar bebé y guardar en localStorage
   const handleSelectBaby = async (babyId) => {
-    setSelectedBabyId(babyId)
-    await setLocalStorage('selectedBabyId', babyId)
-    const baby = babyList.find(b => b.id === babyId)
-    setBabyInfo(baby)
-    setBabySelectorVisible(false)
-    setLoading(false)
-  }
+    setSelectedBabyId(babyId);
+    await setLocalStorage("selectedBabyId", babyId);
+    const baby = babyList.find((b) => b.id === babyId);
+    setBabyInfo(baby);
+    setBabySelectorVisible(false);
+    setLoading(false);
+  };
 
   // Cambiar de bebé
   const handleChangeBaby = () => {
-    setBabySelectorVisible(true)
-  }
+    setBabySelectorVisible(true);
+  };
 
   // Si no hay bebés seleccionados, mostrar selector modularizado
   if (babySelectorVisible) {
@@ -117,17 +124,23 @@ export default function Profile() {
         />
         {showForm && (
           <View style={styles.formWrapper}>
-            <BabyInfoForm initialData={null} onClose={() => {
-              setShowForm(false)
-              if (user) loadBabies(user.email)
-            }} />
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setShowForm(false)}>
+            <BabyInfoForm
+              initialData={null}
+              onClose={() => {
+                setShowForm(false);
+                if (user) loadBabies(user.email);
+              }}
+            />
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setShowForm(false)}
+            >
               <Text style={styles.closeBtnText}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         )}
       </>
-    )
+    );
   }
 
   // Mostrar loading si está cargando info del bebé seleccionado
@@ -137,7 +150,7 @@ export default function Profile() {
         <ActivityIndicator size="large" color={Colors.PRIMARY} />
         <Text style={styles.loadingText}>Cargando perfil...</Text>
       </View>
-    )
+    );
   }
 
   if (showForm) {
@@ -146,15 +159,18 @@ export default function Profile() {
         <BabyInfoForm
           initialData={babyInfo}
           onClose={() => {
-            setShowForm(false)
-            if (user) loadBabies(user.email)
+            setShowForm(false);
+            if (user) loadBabies(user.email);
           }}
         />
-        <TouchableOpacity style={styles.closeBtn} onPress={() => setShowForm(false)}>
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={() => setShowForm(false)}
+        >
           <Text style={styles.closeBtnText}>Cerrar</Text>
         </TouchableOpacity>
       </View>
-    )
+    );
   }
 
   return (
@@ -179,27 +195,34 @@ export default function Profile() {
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Edad:</Text>
-            <Text style={styles.value}>
-              {calculateAge(babyInfo.birthDate)}
-            </Text>
+            <Text style={styles.value}>{calculateAge(babyInfo.birthDate)}</Text>
           </View>
-          <TouchableOpacity style={styles.editBtn} onPress={() => setShowForm(true)}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => setShowForm(true)}
+          >
             <Text style={styles.editBtnText}>Editar información</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.changeBabyBtn} onPress={handleChangeBaby}>
+          <TouchableOpacity
+            style={styles.changeBabyBtn}
+            onPress={handleChangeBaby}
+          >
             <Text style={styles.changeBabyBtnText}>Cambiar de bebé</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.card}>
           <Text style={styles.noInfo}>No hay información del bebé.</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={() => setShowForm(true)}>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => setShowForm(true)}
+          >
             <Text style={styles.addBtnText}>Agregar información</Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -207,7 +230,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     backgroundColor: "#f5f7fa",
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   header: {
     fontSize: 28,
@@ -221,11 +244,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 18,
     padding: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
     elevation: 2,
     marginBottom: 20,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 8px rgba(0,0,0,0.08)" }
+      : {}),
   },
   title: {
     fontSize: 22,
@@ -319,13 +342,13 @@ const styles = StyleSheet.create({
   },
   center: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
     color: Colors.DARK_GRAY,
     fontSize: 16,
-    fontWeight: "500"
+    fontWeight: "500",
   },
 });

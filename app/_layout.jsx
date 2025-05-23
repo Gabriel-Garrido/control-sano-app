@@ -1,8 +1,8 @@
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../config/FirebaseConfig";
+import React, { useEffect, useState } from "react";
 import LoadingScreen from "../components/LoadingScreen";
+import { auth } from "../config/FirebaseConfig";
 
 /**
  * Layout raíz de la app.
@@ -18,14 +18,15 @@ export default function RootLayout() {
     // Escucha cambios de autenticación en Firebase
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
-        // Si no hay usuario, redirige a login
-        router.replace("/login");
+        // Verifica si router.pathname está definido antes de usarlo
+        if (router?.pathname && !router.pathname.startsWith("/login")) {
+          router.replace("/login/signIn");
+        }
       }
       setCheckingAuth(false);
     });
-    // Limpia el listener al desmontar
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   // Muestra loading mientras se verifica el estado de autenticación
   if (checkingAuth) {
@@ -34,11 +35,12 @@ export default function RootLayout() {
 
   // Renderiza las pantallas principales si el usuario está autenticado
   return (
-    <Stack screenOptions={{
-      headerShown: false
-    }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="login" />
     </Stack>
   );
 }

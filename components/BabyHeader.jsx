@@ -1,5 +1,4 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Colors from "../constant/Colors";
 
 // Calcula la edad a partir de la fecha de nacimiento
@@ -27,8 +26,10 @@ function getAge(birthDate) {
   }
   let ageStr = "";
   if (years > 0) ageStr += `${years} año${years > 1 ? "s" : ""}`;
-  if (months > 0) ageStr += `${ageStr ? ", " : ""}${months} mes${months > 1 ? "es" : ""}`;
-  if (days > 0 || (!years && !months)) ageStr += `${ageStr ? " y " : ""}${days} día${days !== 1 ? "s" : ""}`;
+  if (months > 0)
+    ageStr += `${ageStr ? ", " : ""}${months} mes${months > 1 ? "es" : ""}`;
+  if (days > 0 || (!years && !months))
+    ageStr += `${ageStr ? " y " : ""}${days} día${days !== 1 ? "s" : ""}`;
   return ageStr;
 }
 
@@ -36,7 +37,9 @@ export default function BabyHeader({ baby }) {
   if (!baby) return null;
   return (
     <View style={styles.babyHeader}>
-      <Text style={styles.babyName}>{baby.firstName} {baby.lastName}</Text>
+      <Text style={styles.babyName}>
+        {baby.firstName} {baby.lastName}
+      </Text>
       <Text style={styles.babyAge}>Edad: {getAge(baby.birthDate)}</Text>
     </View>
   );
@@ -47,6 +50,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
     marginTop: 10,
+    // Si quieres sombra aquí, usa solo boxShadow en web:
+    // ...(Platform.OS === "web"
+    //   ? { boxShadow: "0px 2px 4px rgba(0,0,0,0.04)" }
+    //   : {}),
   },
   babyName: {
     fontSize: 22,

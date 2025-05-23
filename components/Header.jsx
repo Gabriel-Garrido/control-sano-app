@@ -1,11 +1,11 @@
-import { View, Text, Image, TouchableOpacity, Platform } from "react-native";
-import React, { useEffect, useState } from "react";
-import { getLocalStorage, RemoveLocalStorage } from "../service/Storage";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Colors from "../constant/Colors";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import { Image, Platform, Text, TouchableOpacity, View } from "react-native";
 import { auth } from "../config/FirebaseConfig";
+import Colors from "../constant/Colors";
+import { getLocalStorage, RemoveLocalStorage } from "../service/Storage";
 
 /**
  * Header superior: muestra logo, saludo y botón de logout.
@@ -110,10 +110,10 @@ const headerStyles = {
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
     marginBottom: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
     elevation: 2,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0,0,0,0.04)" }
+      : {}),
   },
   headerRow: {
     flexDirection: "row",

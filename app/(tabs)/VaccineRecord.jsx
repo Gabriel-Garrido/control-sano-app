@@ -1,35 +1,49 @@
+import { useFocusEffect } from "expo-router";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  View,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Platform,
+  View,
 } from "react-native";
-import { db, auth } from "../../config/FirebaseConfig";
-import { collection, query, where, getDocs, addDoc, updateDoc, doc } from "firebase/firestore";
-import { getLocalStorage, setLocalStorage } from "../../service/Storage";
-import Colors from "../../constant/Colors";
-import LoadingScreen from "../../components/LoadingScreen";
-import VaccineForm from "../../components/VaccineForm";
-import Header from "../../components/Header";
-import SelectBaby from "../../components/selectBaby";
-import BabyInfoForm from "../../components/babyInfoForm";
 import BabyHeader from "../../components/BabyHeader";
-import { calculateAge } from "../../utils/dateUtils";
-import { useFocusEffect } from "expo-router";
+import BabyInfoForm from "../../components/babyInfoForm";
+import LoadingScreen from "../../components/LoadingScreen";
+import SelectBaby from "../../components/selectBaby";
+import VaccineForm from "../../components/VaccineForm";
+import { auth, db } from "../../config/FirebaseConfig";
+import Colors from "../../constant/Colors";
+import { getLocalStorage, setLocalStorage } from "../../service/Storage";
 
 // Lista de vacunas PNI Chile por edad
 const VACCINES = [
   { id: "bcg", name: "BCG", age: "Recién nacido" },
   { id: "hepb1", name: "Hepatitis B 1° dosis", age: "Recién nacido" },
   { id: "hexavalente1", name: "Hexavalente 1° dosis", age: "2 meses" },
-  { id: "neumococica1", name: "Neumocócica conjugada 1° dosis", age: "2 meses" },
+  {
+    id: "neumococica1",
+    name: "Neumocócica conjugada 1° dosis",
+    age: "2 meses",
+  },
   { id: "rotavirus1", name: "Rotavirus 1° dosis", age: "2 meses" },
   { id: "hexavalente2", name: "Hexavalente 2° dosis", age: "4 meses" },
-  { id: "neumococica2", name: "Neumocócica conjugada 2° dosis", age: "4 meses" },
+  {
+    id: "neumococica2",
+    name: "Neumocócica conjugada 2° dosis",
+    age: "4 meses",
+  },
   { id: "rotavirus2", name: "Rotavirus 2° dosis", age: "4 meses" },
   { id: "hexavalente3", name: "Hexavalente 3° dosis", age: "6 meses" },
   { id: "influenza1", name: "Influenza 1° dosis", age: "6 meses" },
@@ -87,7 +101,10 @@ export default function VaccineRecord() {
           );
           const querySnapshot = await getDocs(q);
           if (!querySnapshot.empty) {
-            const baby = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+            const baby = {
+              id: querySnapshot.docs[0].id,
+              ...querySnapshot.docs[0].data(),
+            };
             setBabyInfo(baby);
             setBabySelectorVisible(false);
           } else if (babyList.length > 0) {
@@ -281,10 +298,7 @@ export default function VaccineRecord() {
 function VaccineItem({ vaccine, record, onPress }) {
   return (
     <TouchableOpacity
-      style={[
-        styles.vaccineItem,
-        record && styles.vaccineItemDone,
-      ]}
+      style={[styles.vaccineItem, record && styles.vaccineItemDone]}
       onPress={onPress}
       activeOpacity={0.8}
     >
@@ -300,7 +314,9 @@ function VaccineItem({ vaccine, record, onPress }) {
           <Text style={styles.vaccinePending}>Pendiente</Text>
         )}
       </View>
-      <Text style={styles.vaccineAction}>{record ? "Editar" : "Registrar"}</Text>
+      <Text style={styles.vaccineAction}>
+        {record ? "Editar" : "Registrar"}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -332,12 +348,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
     elevation: 1,
     borderLeftWidth: 6,
     borderLeftColor: Colors.PRIMARY,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 6px rgba(0,0,0,0.06)" }
+      : {}),
   },
   vaccineItemDone: {
     backgroundColor: "#e6f7e6",

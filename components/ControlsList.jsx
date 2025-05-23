@@ -1,5 +1,10 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Colors from "../constant/Colors";
 import LoadingScreen from "./LoadingScreen";
 
@@ -7,7 +12,12 @@ import LoadingScreen from "./LoadingScreen";
  * Lista de controles de salud para el bebé seleccionado.
  * Muestra un loading mientras se cargan los controles.
  */
-export default function ControlsList({ controls, doneControls, onSelect, loading = false }) {
+export default function ControlsList({
+  controls,
+  doneControls,
+  onSelect,
+  loading = false,
+}) {
   if (loading) {
     // Mostrar loading mientras se cargan los controles
     return <LoadingScreen text="Cargando controles..." />;
@@ -20,10 +30,7 @@ export default function ControlsList({ controls, doneControls, onSelect, loading
         return (
           <TouchableOpacity
             key={idx}
-            style={[
-              styles.controlBtn,
-              done && styles.controlBtnDone
-            ]}
+            style={[styles.controlBtn, done && styles.controlBtnDone]}
             activeOpacity={0.8}
             onPress={() => onSelect(item)}
           >
@@ -33,7 +40,10 @@ export default function ControlsList({ controls, doneControls, onSelect, loading
               {done && (
                 <View style={styles.doneTag}>
                   <Text style={styles.doneTagText}>
-                    Realizado {done.date ? `el ${new Date(done.date).toLocaleDateString("es-CL")}` : ""}
+                    Realizado{" "}
+                    {done.date
+                      ? `el ${new Date(done.date).toLocaleDateString("es-CL")}`
+                      : ""}
                   </Text>
                 </View>
               )}
@@ -52,12 +62,13 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 18,
     marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
     elevation: 1,
     borderLeftWidth: 6,
     borderLeftColor: Colors.PRIMARY,
+    // Quitar shadowColor, shadowOpacity, shadowRadius
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 6px rgba(0,0,0,0.06)" }
+      : {}),
   },
   controlBtnDone: {
     backgroundColor: "#e6f7e6",

@@ -1,10 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
-import { db, auth } from "../config/FirebaseConfig";
-import { collection, addDoc, updateDoc, doc, deleteDoc } from "firebase/firestore";
-import DateSelector from "./DateSelector";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { auth, db } from "../config/FirebaseConfig";
 import Colors from "../constant/Colors";
 import { getLocalStorage, setLocalStorage } from "../service/Storage";
+import DateSelector from "./DateSelector";
 
 /**
  * Formulario para agregar o editar información de un bebé.
@@ -18,7 +33,11 @@ export default function BabyInfoForm({ initialData, onClose }) {
     initialData?.birthDate
       ? initialData.birthDate.toDate
         ? initialData.birthDate.toDate()
-        : new Date(initialData.birthDate.seconds ? initialData.birthDate.seconds * 1000 : initialData.birthDate)
+        : new Date(
+            initialData.birthDate.seconds
+              ? initialData.birthDate.seconds * 1000
+              : initialData.birthDate
+          )
       : new Date()
   );
   const [loading, setLoading] = useState(false);
@@ -31,7 +50,11 @@ export default function BabyInfoForm({ initialData, onClose }) {
       initialData?.birthDate
         ? initialData.birthDate.toDate
           ? initialData.birthDate.toDate()
-          : new Date(initialData.birthDate.seconds ? initialData.birthDate.seconds * 1000 : initialData.birthDate)
+          : new Date(
+              initialData.birthDate.seconds
+                ? initialData.birthDate.seconds * 1000
+                : initialData.birthDate
+            )
         : new Date()
     );
   }, [initialData]);
@@ -57,7 +80,10 @@ export default function BabyInfoForm({ initialData, onClose }) {
           birthDate,
           userEmail: user.email,
         });
-        setFeedback({ type: "success", message: "¡Información actualizada con éxito!" });
+        setFeedback({
+          type: "success",
+          message: "¡Información actualizada con éxito!",
+        });
       } else {
         // Crear nuevo bebé
         await addDoc(collection(db, "baby"), {
@@ -66,10 +92,16 @@ export default function BabyInfoForm({ initialData, onClose }) {
           birthDate,
           userEmail: user.email,
         });
-        setFeedback({ type: "success", message: "¡Información guardada con éxito!" });
+        setFeedback({
+          type: "success",
+          message: "¡Información guardada con éxito!",
+        });
       }
     } catch (error) {
-      setFeedback({ type: "error", message: "Error al guardar: " + error.message });
+      setFeedback({
+        type: "error",
+        message: "Error al guardar: " + error.message,
+      });
       console.error("addDoc/updateDoc error:", error);
     }
     setLoading(false);
@@ -79,7 +111,11 @@ export default function BabyInfoForm({ initialData, onClose }) {
   const confirmDelete = () => {
     if (Platform.OS === "web") {
       // Web: usar window.confirm
-      if (window.confirm("¿Estás seguro de que deseas eliminar este bebé? Esta acción no se puede deshacer.")) {
+      if (
+        window.confirm(
+          "¿Estás seguro de que deseas eliminar este bebé? Esta acción no se puede deshacer."
+        )
+      ) {
         handleDelete();
       }
     } else {
@@ -94,7 +130,7 @@ export default function BabyInfoForm({ initialData, onClose }) {
               text: "Eliminar",
               style: "destructive",
               onPress: handleDelete,
-            }
+            },
           ]
         );
       });
@@ -116,7 +152,10 @@ export default function BabyInfoForm({ initialData, onClose }) {
       setFeedback({ type: "success", message: "¡Bebé eliminado con éxito!" });
       success = true;
     } catch (error) {
-      setFeedback({ type: "error", message: "Error al eliminar: " + error.message });
+      setFeedback({
+        type: "error",
+        message: "Error al eliminar: " + error.message,
+      });
       console.error("deleteDoc error:", error);
     }
     setLoading(false);
@@ -128,14 +167,21 @@ export default function BabyInfoForm({ initialData, onClose }) {
   if (feedback) {
     return (
       <View style={styles.container}>
-        <Text style={[
-          styles.feedback,
-          feedback.type === "success" ? styles.success : styles.error
-        ]}>
+        <Text
+          style={[
+            styles.feedback,
+            feedback.type === "success" ? styles.success : styles.error,
+          ]}
+        >
           {feedback.message}
         </Text>
         <TouchableOpacity
-          style={[styles.button, feedback.type === "success" ? styles.buttonSuccess : styles.buttonError]}
+          style={[
+            styles.button,
+            feedback.type === "success"
+              ? styles.buttonSuccess
+              : styles.buttonError,
+          ]}
           onPress={() => {
             setFeedback(null);
             if (feedback.type === "success" && onClose) onClose();
@@ -154,7 +200,9 @@ export default function BabyInfoForm({ initialData, onClose }) {
     >
       <View style={styles.container}>
         <Text style={styles.header}>Información del bebé</Text>
-        <Text style={styles.label}>Nombre <Text style={styles.required}>*</Text></Text>
+        <Text style={styles.label}>
+          Nombre <Text style={styles.required}>*</Text>
+        </Text>
         <TextInput
           style={styles.input}
           value={firstName}
@@ -203,7 +251,9 @@ export default function BabyInfoForm({ initialData, onClose }) {
             <Text style={styles.buttonText}>Eliminar bebé</Text>
           </TouchableOpacity>
         )}
-        <Text style={styles.note}><Text style={styles.required}>*</Text> Campo obligatorio</Text>
+        <Text style={styles.note}>
+          <Text style={styles.required}>*</Text> Campo obligatorio
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -218,12 +268,14 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#fff",
     borderRadius: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.10,
-    shadowRadius: 12,
     elevation: 3,
     margin: 10,
     gap: 2,
+    // Quitar shadowColor, shadowOpacity, shadowRadius
+    // boxShadow solo para web
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 12px rgba(0,0,0,0.10)" }
+      : {}),
   },
   header: {
     fontSize: 26,
@@ -260,10 +312,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 24,
     alignItems: "center",
-    shadowColor: Colors.PRIMARY,
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
+    // Quitar shadowColor, shadowOpacity, shadowRadius
     elevation: 2,
+    // boxShadow solo para web
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0,0,0,0.12)" }
+      : {}),
     transitionDuration: "150ms",
   },
   buttonDisabled: {

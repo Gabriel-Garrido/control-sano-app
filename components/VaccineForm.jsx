@@ -1,13 +1,30 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal, SafeAreaView, TextInput, StyleSheet, Platform } from "react-native";
-import DateSelector from "./DateSelector";
+import { useEffect, useState } from "react";
+import {
+  Modal,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Colors from "../constant/Colors";
+import DateSelector from "./DateSelector";
 
 /**
  * Formulario para registrar o editar una vacuna.
  */
-export default function VaccineForm({ visible, onClose, vaccine, onSave, initialData }) {
-  const [date, setDate] = useState(initialData?.date ? new Date(initialData.date) : new Date());
+export default function VaccineForm({
+  visible,
+  onClose,
+  vaccine,
+  onSave,
+  initialData,
+}) {
+  const [date, setDate] = useState(
+    initialData?.date ? new Date(initialData.date) : new Date()
+  );
   const [center, setCenter] = useState(initialData?.center || "");
 
   useEffect(() => {
@@ -19,8 +36,14 @@ export default function VaccineForm({ visible, onClose, vaccine, onSave, initial
     <Modal visible={visible} animationType="slide" transparent>
       <SafeAreaView style={styles.modalSafeArea}>
         <View style={styles.modalContainer}>
-          <Text style={styles.modalTitle}>Registrar vacuna: {vaccine?.name}</Text>
-          <DateSelector label="Fecha de administración" value={date} onChange={setDate} />
+          <Text style={styles.modalTitle}>
+            Registrar vacuna: {vaccine?.name}
+          </Text>
+          <DateSelector
+            label="Fecha de administración"
+            value={date}
+            onChange={setDate}
+          />
           <Text style={styles.label}>Centro de salud</Text>
           <TextInput
             style={styles.input}
@@ -39,7 +62,10 @@ export default function VaccineForm({ visible, onClose, vaccine, onSave, initial
             >
               <Text style={styles.saveBtnText}>Guardar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.cancelBtn, { flex: 1 }]} onPress={onClose}>
+            <TouchableOpacity
+              style={[styles.cancelBtn, { flex: 1 }]}
+              onPress={onClose}
+            >
               <Text style={styles.cancelBtnText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
@@ -60,10 +86,10 @@ const styles = StyleSheet.create({
     margin: 24,
     borderRadius: 16,
     padding: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
     elevation: 4,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 8px rgba(0,0,0,0.12)" }
+      : {}),
   },
   modalTitle: {
     fontSize: 20,

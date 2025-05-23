@@ -1,7 +1,7 @@
-import { View } from "react-native";
-import React, { useCallback } from "react";
-import { Tabs, useRouter, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Tabs, useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback } from "react";
+import { View } from "react-native";
 import Header from "../../components/Header";
 import { verifyUserInFirebase } from "../../utils/authUtils";
 
@@ -16,7 +16,6 @@ export default function TabLayout() {
   useFocusEffect(
     useCallback(() => {
       verifyUserInFirebase(router);
-      // También puedes refrescar otros datos aquí si lo necesitas
     }, [router])
   );
 

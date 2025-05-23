@@ -1,29 +1,28 @@
-import React, { useState, useEffect } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Modal,
-  SafeAreaView,
-  Platform,
+  View,
 } from "react-native";
+import BabyHeader from "../../components/BabyHeader";
+import BabyInfoForm from "../../components/babyInfoForm";
+import ControlForm from "../../components/ControlForm";
+import ControlsList from "../../components/ControlsList";
+import DailyTip from "../../components/DailyTip";
+import LoadingScreen from "../../components/LoadingScreen";
+import SelectBaby from "../../components/selectBaby";
+import { auth, db } from "../../config/FirebaseConfig";
 import Colors from "../../constant/Colors";
 import healthControls from "../../constant/Options";
-import ControlForm from "../../components/ControlForm";
-import { db, auth } from "../../config/FirebaseConfig";
-import { query, where, getDocs, collection } from "firebase/firestore";
 import { getLocalStorage, setLocalStorage } from "../../service/Storage";
-import { useFocusEffect, useRouter } from "expo-router";
-import SelectBaby from "../../components/selectBaby";
-import BabyHeader from "../../components/BabyHeader";
-import ControlsList from "../../components/ControlsList";
-import BabyInfoForm from "../../components/babyInfoForm";
-import LoadingScreen from "../../components/LoadingScreen";
-import { onAuthStateChanged } from "firebase/auth";
-import DailyTip from "../../components/DailyTip";
-import Header from "../../components/Header";
 
 /**
  * Pantalla principal: muestra header, info del bebé, consejo diario y controles.
@@ -88,7 +87,7 @@ export default function Index() {
     }
   }, [selectedBabyId, babyList, babyLoading]);
 
-    // Sincroniza el bebé seleccionado cada vez que la pantalla obtiene el foco
+  // Sincroniza el bebé seleccionado cada vez que la pantalla obtiene el foco
   useFocusEffect(
     React.useCallback(() => {
       const syncSelectedBaby = async () => {
@@ -105,7 +104,10 @@ export default function Index() {
             );
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
-              const baby = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+              const baby = {
+                id: querySnapshot.docs[0].id,
+                ...querySnapshot.docs[0].data(),
+              };
               setBabyInfo(baby);
             }
           } catch (e) {
@@ -257,7 +259,6 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-
       {/* Scroll principal para el resto del contenido */}
       <ScrollView
         style={styles.container}
@@ -306,7 +307,10 @@ export default function Index() {
       >
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.modalContainer}>
-            <TouchableOpacity style={styles.closeBtn} onPress={handleCloseModal}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={handleCloseModal}
+            >
               <Text style={styles.closeBtnText}>Cerrar</Text>
             </TouchableOpacity>
             {loading ? (
@@ -355,10 +359,10 @@ const styles = StyleSheet.create({
     marginBottom: 22,
     alignSelf: "center",
     width: "80%",
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
     elevation: 1,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 4px rgba(0,0,0,0.04)" }
+      : {}),
   },
   changeBabyBtnText: {
     color: Colors.PRIMARY,

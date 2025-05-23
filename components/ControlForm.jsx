@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { db } from "../config/FirebaseConfig";
-import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
 import Colors from "../constant/Colors";
 import healthControls from "../constant/Options";
 
-export default function ControlForm({ control, controlData, onSaved, onClose, userEmail, babyId }) {
+export default function ControlForm({
+  control,
+  controlData,
+  onSaved,
+  onClose,
+  userEmail,
+  babyId,
+}) {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null);
@@ -20,9 +36,9 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
 
   if (!control) return null;
 
-  const controlOption = healthControls.find(c => c.label === control.label);
+  const controlOption = healthControls.find((c) => c.label === control.label);
   const fields = controlOption?.fields || [
-    { key: "observaciones", label: "Observaciones", type: "text" }
+    { key: "observaciones", label: "Observaciones", type: "text" },
   ];
 
   const handleChange = (key, value) => {
@@ -33,7 +49,8 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
     if (!userEmail || !babyId) {
       setFeedback({
         type: "error",
-        message: "No se puede guardar el control: falta información del usuario o del bebé. Por favor, asegúrate de haber ingresado los datos del bebé y haber iniciado sesión."
+        message:
+          "No se puede guardar el control: falta información del usuario o del bebé. Por favor, asegúrate de haber ingresado los datos del bebé y haber iniciado sesión.",
       });
       return;
     }
@@ -55,7 +72,10 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
       } else {
         await addDoc(collection(db, "controls"), dataToSave);
       }
-      setFeedback({ type: "success", message: "¡Control guardado correctamente!" });
+      setFeedback({
+        type: "success",
+        message: "¡Control guardado correctamente!",
+      });
       if (onSaved) onSaved();
     } catch (e) {
       setFeedback({ type: "error", message: "No se pudo guardar el control" });
@@ -66,14 +86,21 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
   if (feedback) {
     return (
       <View style={styles.container}>
-        <Text style={[
-          styles.feedback,
-          feedback.type === "success" ? styles.success : styles.error
-        ]}>
+        <Text
+          style={[
+            styles.feedback,
+            feedback.type === "success" ? styles.success : styles.error,
+          ]}
+        >
           {feedback.message}
         </Text>
         <TouchableOpacity
-          style={[styles.saveBtn, feedback.type === "success" ? styles.buttonSuccess : styles.buttonError]}
+          style={[
+            styles.saveBtn,
+            feedback.type === "success"
+              ? styles.buttonSuccess
+              : styles.buttonError,
+          ]}
           onPress={() => {
             setFeedback(null);
             if (feedback.type === "success" && onClose) onClose();
@@ -90,18 +117,28 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
       <Text style={styles.title}>{control.label}</Text>
       <Text style={styles.professional}>{control.professional}</Text>
       {controlData ? (
-        <Text style={styles.status}>Control realizado el {new Date(controlData.date).toLocaleDateString("es-ES")}</Text>
+        <Text style={styles.status}>
+          Control realizado el{" "}
+          {new Date(controlData.date).toLocaleDateString("es-ES")}
+        </Text>
       ) : (
         <Text style={styles.status}>Control no realizado aún</Text>
       )}
       <View style={styles.form}>
-        {fields.map(field => (
+        {fields.map((field) => (
           <View key={field.key} style={styles.inputGroup}>
             <Text style={styles.label}>{field.label}</Text>
             <TextInput
               style={styles.input}
               value={form[field.key] ? String(form[field.key]) : ""}
-              onChangeText={value => handleChange(field.key, field.type === "number" ? value.replace(/[^0-9.]/g, "") : value)}
+              onChangeText={(value) =>
+                handleChange(
+                  field.key,
+                  field.type === "number"
+                    ? value.replace(/[^0-9.]/g, "")
+                    : value
+                )
+              }
               keyboardType={field.type === "number" ? "numeric" : "default"}
               placeholder={field.label}
               editable={!saving}
@@ -114,7 +151,13 @@ export default function ControlForm({ control, controlData, onSaved, onClose, us
         onPress={handleSave}
         disabled={saving}
       >
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>{controlData ? "Editar" : "Guardar"}</Text>}
+        {saving ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.saveBtnText}>
+            {controlData ? "Editar" : "Guardar"}
+          </Text>
+        )}
       </TouchableOpacity>
       <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
         <Text style={styles.cancelBtnText}>Cancelar</Text>
@@ -130,12 +173,12 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#fff",
     borderRadius: 18,
-    shadowColor: "#000",
-    shadowOpacity: 0.10,
-    shadowRadius: 12,
     elevation: 3,
     margin: 10,
     gap: 2,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 12px rgba(0,0,0,0.10)" }
+      : {}),
   },
   title: {
     fontSize: 22,

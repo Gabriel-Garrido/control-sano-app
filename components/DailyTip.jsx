@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import Colors from "../constant/Colors";
 import { getAgeInDays } from "../utils/dateUtils";
 
@@ -43,7 +43,9 @@ export default function DailyTip({ birthDate }) {
 
   return (
     <View style={styles.tipContainer}>
-      <Text style={styles.tipTitle}>Consejo del día {ageInDays ? `(Día ${ageInDays})` : ""}</Text>
+      <Text style={styles.tipTitle}>
+        Consejo del día {ageInDays ? `(Día ${ageInDays})` : ""}
+      </Text>
       {tip ? (
         <>
           <Text style={styles.tipSubtitle}>{tip.title}</Text>
@@ -63,10 +65,10 @@ const styles = StyleSheet.create({
     padding: 18,
     marginVertical: 12,
     marginHorizontal: 0,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
     elevation: 2,
+    ...(Platform.OS === "web"
+      ? { boxShadow: "0px 2px 8px rgba(0,0,0,0.08)" }
+      : {}),
   },
   tipTitle: {
     fontSize: 18,
